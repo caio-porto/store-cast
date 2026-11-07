@@ -2,14 +2,23 @@
 
 **Store Cast** is a powerful, self-hosted digital signage solution designed for simplicity and flexibility. Cast your content to any screen, anywhere, with a centralized web-based dashboard. Whether you're managing a single display in a lobby or a network of screens across multiple locations, Store Cast provides the tools you need to deliver dynamic content effortlessly.
 
+### 📸 Screenshots
+
+#### Admin Dashboard — Display Network Management
+![Store Cast Admin Dashboard](docs/screenshots/dashboard.png)
+
+#### Multi-Zone Screen Layout Designer
+![Store Cast Layout Designer](docs/screenshots/layout-design.png)
+
 ### ✨ Key Features
 
 -   **Web-Based Dashboard**: Manage all your screens, playlists, campaigns, and users from a clean and intuitive web interface.
--   **Multi-Content Support**: Display images, videos, websites, and YouTube content.
--   **Flexible Grouping**: Organize screens into groups to push targeted playlists to multiple displays at once.
+-   **Multi-Zone Layout Designer**: Visually split screens into custom zones (sidebars, L-frames, tickers, split-screens) and assign independent playlists to each zone.
+-   **Multi-Content Support**: Display images, videos, websites, and YouTube content with hardware-accelerated gapless playback.
+-   **Flexible Grouping**: Organize screens into groups to push targeted campaigns and playlists to multiple displays at once.
 -   **User Management**: Role-based access control with `ADMIN` and `OWNER` roles to delegate management.
 -   **Real-Time Updates**: Changes made in the dashboard are pushed instantly to screens via WebSockets.
--   **Cross-Platform Player**: The player is a web app that can run on any device with a modern browser. It is optimized for Android devices and can be easily packaged using Capacitor.
+-   **Cross-Platform Player**: The player is a web app that can run on any device with a modern browser. It is optimized for Android TV boxes and can be easily packaged using Capacitor.
 -   **Lightweight & Self-Hosted**: Runs on your own Linux server, giving you full control over your data and infrastructure. Built with Node.js, Express, React, and SQLite.
 
 ---
