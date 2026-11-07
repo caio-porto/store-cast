@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Store Cast Digital Signage</title>
+  
+  <script>
+    // ES2022 Polyfills for legacy TV WebViews (Chrome < 92)
+    if (!Array.prototype.at) {
+      Array.prototype.at = function(n) {
+        n = Math.trunc(n) || 0;
+        if (n < 0) n += this.length;
+        if (n < 0 || n >= this.length) return undefined;
+        return this[n];
+      };
+    }
+    if (!String.prototype.at) {
+      String.prototype.at = function(n) {
+        n = Math.trunc(n) || 0;
+        if (n < 0) n += this.length;
+        if (n < 0 || n >= this.length) return undefined;
+        return this[n];
+      };
+    }
+
+    // CRITICAL: Raw Error Handler for TV Debugging
+    window.startTime = Date.now();
+    window.logBuffer = [];
+
+    function getTimestamp() {
+      try {
+        return '[' + new Date().toISOString() + '] ';
+      } catch (e) {
+        return '[' + (new Date()).getTime() + '] ';
+      }
+    }
+
+    function safeSend(logs) {
+      if (window.location.port === '8766') return;
+      try {
+        var ts = getTimestamp();
+        var timestamped = logs.map(function(l) {
+          if (typeof l === 'string' && /^\[\d{4}-\d{2}-\d{2}/.test(l)) return l;
+          return ts + l;
+        });
+        var id = localStorage.getItem('storecast_device_id') || 'UNKNOWN_TV_' + Math.floor(Math.random() * 1000);
+        fetch('/api/devices/' + id + '/logs', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ logs: timestamped })
+        }).catch(function (e) { }); // silent
+      } catch (e) { }
+    }
+
+    function showErr(msg) {
+      safeSend(["FATAL_JS: " + msg]);
+    }
+
+    // Capture phase listener for resource errors (script 404s etc)
+    window.addEventListener('error', function (e) {
+      var msg = e.message || e.type;
+      if (e.target && e.target.tagName) {
+        msg += ' from ' + e.target.tagName + ' (src: ' + (e.target.src || e.target.href) + ')';
+      }
+      showErr("CAPTURED: " + msg);
+    }, true);
+
+    window.onerror = function (msg, url, line, col, error) {
+      showErr("ONERROR: " + msg + " at " + line + ":" + col + " " + url);
+      return false;
+    };
+
+    window.addEventListener('unhandledrejection', function (event) {
+      showErr("PROMISE: " + event.reason);
+    });
+
+    // Wrap console to see non-fatal errors
+    var oldLog = console.log;
+    var oldErr = console.error;
+    console.log = function () { 
+      var msg = Array.from(arguments).join(' ');
+      
+      // Silence Tizen native injection spam (YouTube/Watch Later buttons etc)
+      if (msg.indexOf('title =') !== -1) return;
+
+      safeSend(["CONSOLE [1.1.7]: " + msg]); 
+      oldLog.applyUnsafe ? oldLog.applyUnsafe(console, arguments) : oldLog.apply(console, arguments); 
+    };
+    console.error = function () { showErr("CONSOLE_ERR: " + Array.from(arguments).join(' ')); oldErr.apply(console, arguments); };
+
+    // Ping on load
+    window.addEventListener('load', function () {
+      safeSend(["[RawHTML] Page Loaded"]);
+    });
+  </script>
+
+  <style>
+    body {
+      background-color: #0f172a;
+    }
+  </style>
+  <script type="module" src="/index.tsx"></script>
+</head>
+
+<body style="background-color: #0f172a; color: white; margin: 0; overflow: hidden; height: 100vh; width: 100vw;">
+
+  <div id="root">
+    <div
+      style="height: 100vh; display: flex; align-items: center; justify-content: center; font-family: sans-serif; flex-direction: column;">
+      <h1 style="color: #3b82f6;">Store Cast</h1>
+      <p style="opacity: 0.7; margin-top: 10px;">Initializing System...</p>
+      <p style="opacity: 0.5; font-size: 12px; margin-top: 20px;">v1.0.5 (Legacy Mode)</p>
+    </div>
+  </div>
+</body>
+
+</html>

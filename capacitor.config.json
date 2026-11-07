@@ -1,0 +1,17 @@
+{
+  "appId": "com.storecast.player",
+  "appName": "Store Cast",
+  "webDir": "dist",
+  "server": {
+    "androidScheme": "https"
+  },
+  "plugins": {
+    "Keyboard": {
+      "resize": "none"
+    },
+    "StatusBar": {
+      "style": "DARK",
+      "overlaysWebView": true
+    }
+  }
+}
