@@ -891,10 +891,20 @@ class RealServer {
                     if (xhr.status >= 200 && xhr.status < 300 && data.success) {
                         resolve({ success: true, url: data.url });
                     } else {
-                        resolve({ success: false, message: data.error || "Upload failed" });
+                        resolve({ success: false, message: data.error || `Upload failed (HTTP ${xhr.status})` });
                     }
                 } catch (e: any) {
-                    resolve({ success: false, message: e.message || "Invalid server response" });
+                    if (xhr.status === 413) {
+                        resolve({ success: false, message: "File is too large for the server (HTTP 413 Request Entity Too Large). Check Nginx client_max_body_size." });
+                    } else if (xhr.status === 504) {
+                        resolve({ success: false, message: "Gateway timeout (HTTP 504). Video transcoding took too long." });
+                    } else if (xhr.status === 502) {
+                        resolve({ success: false, message: "Bad gateway (HTTP 502). Server is restarting or unavailable." });
+                    } else if (xhr.status >= 400) {
+                        resolve({ success: false, message: `Server error (${xhr.status}: ${xhr.statusText || 'Upload failed'})` });
+                    } else {
+                        resolve({ success: false, message: e.message || "Invalid server response" });
+                    }
                 }
             };
 

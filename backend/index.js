@@ -1133,6 +1133,14 @@ appAdmin.get('/api/preview-campaign/:id', async (req, res) => {
     res.json({ ...campaign, layout });
 });
 
+function getFfmpegBin() {
+    try {
+        const ffmpegStatic = require('ffmpeg-static');
+        if (ffmpegStatic && fs.existsSync(ffmpegStatic)) return ffmpegStatic;
+    } catch (e) {}
+    return 'ffmpeg';
+}
+
 function extractBase64ToFile(content, name) {
     if (!content || typeof content !== 'string' || !content.startsWith('data:')) {
         return content;
@@ -1165,7 +1173,8 @@ function extractBase64ToFile(content, name) {
         try {
             fs.writeFileSync(rawPath, buffer);
             console.log(`[FFMPEG] Auto-extracting & optimizing 1080p video: ${name || finalFilename}`);
-            exec(`ffmpeg -y -i "${rawPath}" -vf "scale='if(gt(iw,ih),min(1920,iw),-2)':'if(gt(iw,ih),-2,min(1920,ih))',format=yuv420p" -r 30 -c:v libx264 -profile:v main -level 4.1 -preset fast -crf 20 -maxrate 3500k -bufsize 5000k -tune fastdecode -c:a aac -b:a 128k -movflags +faststart "${finalPath}"`, (err) => {
+            const ffmpegCmd = `"${getFfmpegBin()}" -y -i "${rawPath}" -vf "scale='if(gt(iw,ih),min(1920,iw),-2)':'if(gt(iw,ih),-2,min(1920,ih))',format=yuv420p" -r 30 -c:v libx264 -profile:v main -level 4.1 -preset fast -crf 20 -maxrate 3500k -bufsize 5000k -tune fastdecode -c:a aac -b:a 128k -movflags +faststart "${finalPath}"`;
+            exec(ffmpegCmd, (err) => {
                 if (fs.existsSync(rawPath)) try { fs.unlinkSync(rawPath); } catch(e){}
                 if (err || !fs.existsSync(finalPath)) {
                     fs.writeFileSync(finalPath, buffer);
@@ -1265,7 +1274,8 @@ appAdmin.post('/api/upload', requireAuth, (req, res) => {
             fs.writeFileSync(rawPath, buffer);
             console.log(`[FFMPEG] Transcoding video to optimized 1080p TV H.264 MP4: ${rawPath} -> ${finalPath}`);
 
-            exec(`ffmpeg -y -i "${rawPath}" -vf "scale='if(gt(iw,ih),min(1920,iw),-2)':'if(gt(iw,ih),-2,min(1920,ih))',format=yuv420p" -r 30 -c:v libx264 -profile:v main -level 4.1 -preset fast -crf 20 -maxrate 3500k -bufsize 5000k -tune fastdecode -c:a aac -b:a 128k -movflags +faststart "${finalPath}"`, (err, stdout, stderr) => {
+            const ffmpegCmd = `"${getFfmpegBin()}" -y -i "${rawPath}" -vf "scale='if(gt(iw,ih),min(1920,iw),-2)':'if(gt(iw,ih),-2,min(1920,ih))',format=yuv420p" -r 30 -c:v libx264 -profile:v main -level 4.1 -preset fast -crf 20 -maxrate 3500k -bufsize 5000k -tune fastdecode -c:a aac -b:a 128k -movflags +faststart "${finalPath}"`;
+            exec(ffmpegCmd, (err, stdout, stderr) => {
                 if (fs.existsSync(rawPath)) {
                     try { fs.unlinkSync(rawPath); } catch (e) {}
                 }
@@ -1333,7 +1343,7 @@ appAdmin.post('/api/utils/rotate', requireAuth, (req, res) => {
     }
 
     console.log(`[FFMPEG] Rotating video file: ${inputPath} -> ${outputPath}`);
-    exec(`ffmpeg -y -i "${inputPath}" -vf "transpose=1" -c:v libx264 -pix_fmt yuv420p -preset fast -crf 23 -c:a copy -movflags +faststart "${outputPath}"`, (err) => {
+    exec(`"${getFfmpegBin()}" -y -i "${inputPath}" -vf "transpose=1" -c:v libx264 -pix_fmt yuv420p -preset fast -crf 23 -c:a copy -movflags +faststart "${outputPath}"`, (err) => {
         if (err || !fs.existsSync(outputPath)) {
             console.error("Rotation Util Error:", err);
             if (!isPath && fs.existsSync(inputPath)) fs.unlinkSync(inputPath);
