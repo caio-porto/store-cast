@@ -26,6 +26,7 @@ Before you begin, ensure your server has the following software installed:
 -   A Linux server (Ubuntu 20.04+ is recommended).
 -   `git`: For cloning the repository.
 -   `Node.js` (v16 or later) and `npm`.
+-   `ffmpeg`: For automatic video transcoding, rotation, and 1080p optimization.
 -   `nginx`: To act as a reverse proxy for your domains.
 -   `ufw`: A simple firewall to secure your server.
 
@@ -33,7 +34,7 @@ You can install these on Ubuntu/Debian with:
 
 ```bash
 sudo apt update
-sudo apt install -y git nodejs npm nginx ufw
+sudo apt install -y git nodejs npm ffmpeg nginx ufw
 ```
 
 ---
@@ -101,6 +102,7 @@ We will use NGINX to direct traffic from your domains to these internal ports.
     server {
         listen 80;
         server_name admin.yourdomain.com;
+        client_max_body_size 1024M;
 
         location / {
             proxy_pass http://localhost:8766;
@@ -117,6 +119,7 @@ We will use NGINX to direct traffic from your domains to these internal ports.
     server {
         listen 80;
         server_name tv.yourdomain.com;
+        client_max_body_size 1024M;
 
         location / {
             proxy_pass http://localhost:8765;
